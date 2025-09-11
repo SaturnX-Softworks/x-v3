@@ -1,0 +1,9 @@
+﻿     Creating library C:\Users\ChimeraLle\Documents\ExternalExecutor\x64\Release\ExternalExecutor.lib and object C:\Users\ChimeraLle\Documents\ExternalExecutor\x64\Release\ExternalExecutor.exp
+  Generating code
+  1 of 11110 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    35 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  ExternalExecutor.vcxproj -> C:\Users\ChimeraLle\Documents\ExternalExecutor\x64\Release\ExternalExecutor.dll
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.
