@@ -6,13 +6,19 @@ Made by: ChimeraLle
 
 Unc Dev: Proohio
 
-Made in 4h
-
-It can run InfiniteYield and Dex!
+Version: 1.0.1
 
 # Features
 LEVEL 3
 
-UNC 11%
+UNC 34%
 
-SUNC 3% // missing dependecies
+SUNC 16% // https://r.sunc.su/5yMamZyJdy
+
+# Changelogs
+
+Updated to latest roblox version!
+
+Added 23% new unc
+
+Cool UI
