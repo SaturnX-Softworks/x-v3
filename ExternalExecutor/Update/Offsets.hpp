@@ -17,4 +17,7 @@ namespace Offsets {
 
 	inline constexpr uintptr_t LocalScriptByteCode = 0x1B0;
 	inline constexpr uintptr_t ModuleScriptByteCode = 0x158;
+
+	inline constexpr uintptr_t ScriptContext = 0x3D0;
+	inline constexpr uintptr_t RequireBypass = 0x828;
 }
