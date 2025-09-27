@@ -3,6 +3,10 @@ local CoreGuiService = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local InsertService = game:GetService("InsertService")
 local PlayersService = game:GetService("Players")
+local VirtualInputManager = Instance.new("VirtualInputManager")
+
+local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
+local Camera = workspace.CurrentCamera
 
 -- Main folder structure
 local MainFolder = Instance.new("Folder", CoreGuiService)
@@ -15,6 +19,7 @@ BridgeFolder.Name = "Bridge"
 local LocalPlayer = PlayersService.LocalPlayer
 
 local RealTypeof = typeof
+local RobloxActive = true
 
 -- GUI references
 local RobloxGui = CoreGuiService:FindFirstChild("RobloxGui")
@@ -918,6 +923,209 @@ CryptographyModule.hash = function(inputText, hashAlgorithm)
 end
 
 Environment.crypt = CryptographyModule
+				
+-- dawg who uses the rconsole functions
+Environment.rconsoleclear = function()
+end
+Environment.consoleclear = Environment.rconsoleclear
+
+Environment.rconsolecreate = function()
+end
+Environment.consolecreate = Environment.rconsolecreate
+
+Environment.rconsoledestroy = function()
+end
+Environment.consoledestroy = Environment.rconsoledestroy
+
+Environment.rconsoleinput = function()
+	return ""
+end
+Environment.consoleinput = Environment.rconsoleinput
+
+Environment.rconsoleprint = function(...)
+end
+Environment.consoleprint = Environment.rconsoleprint
+
+Environment.rconsolesettitle = function(title)
+end
+
+Environment.mouse1press = function()
+    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, true, game, 0)
+end
+
+Environment.mouse1release = function()
+    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, false, game, 0)
+end
+
+Environment.mouse1click = function()
+    Environment.mouse1press()
+    Environment.mouse1release()
+end
+
+Environment.mouse2press = function()
+    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 1, true, game, 0)
+end
+
+Environment.mouse2release = function()
+    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 1, false, game, 0)
+end
+
+Environment.mouse2click = function()
+    Environment.mouse2press()
+    Environment.mouse2release()
+end
+
+Environment.mousemoveabs = function(x, y)
+    VirtualInputManager:SendMouseWheelEvent(x, y, false, game)
+end
+
+Environment.mousemoverel = function(x, y)
+    Environment.mousemoveabs(Camera.ViewportSize.X * x, Camera.ViewportSize.Y * y)
+end
+				
+Environment.checkcaller = function()
+	local info = debug.info(getgenv, 'slnaf')
+	return debug.info(1, 'slnaf')==info
+end
+
+Environment.writefile = function(filepath, content)
+	assert(type(filepath) == "string", "invalid argument #1 to 'writefile' (string expected, got " .. type(filepath) .. ") ", 2)
+	assert(type(content) == "string", "invalid argument #2 to 'writefile' (string expected, got " .. type(content) .. ") ", 2)
+	
+	local result = SendRequest(content, "writefile", {
+		["path"] = filepath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+end
+
+Environment.readfile = function(filepath)
+	assert(type(filepath) == "string", "invalid argument #1 to 'readfile' (string expected, got " .. type(filepath) .. ") ", 2)
+	
+	local result = SendRequest("", "readfile", {
+		["path"] = filepath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+	
+	return result
+end
+
+Environment.makefolder = function(folderpath)
+	assert(type(folderpath) == "string", "invalid argument #1 to 'makefolder' (string expected, got " .. type(folderpath) .. ") ", 2)
+	
+	local result = SendRequest("", "makefolder", {
+		["path"] = folderpath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+end
+
+Environment.isfolder = function(path)
+	assert(type(path) == "string", "invalid argument #1 to 'isfolder' (string expected, got " .. type(path) .. ") ", 2)
+	
+	local result = SendRequest("", "isfolder", {
+		["path"] = path
+	})
+	
+	return result == "true"
+end
+
+Environment.isfile = function(path)
+	assert(type(path) == "string", "invalid argument #1 to 'isfile' (string expected, got " .. type(path) .. ") ", 2)
+	
+	local result = SendRequest("", "isfile", {
+		["path"] = path
+	})
+	
+	return result == "true"
+end
+
+Environment.delfile = function(filepath)
+	assert(type(filepath) == "string", "invalid argument #1 to 'delfile' (string expected, got " .. type(filepath) .. ") ", 2)
+	
+	local result = SendRequest("", "delfile", {
+		["path"] = filepath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+end
+
+Environment.delfolder = function(folderpath)
+	assert(type(folderpath) == "string", "invalid argument #1 to 'delfolder' (string expected, got " .. type(folderpath) .. ") ", 2)
+	
+	local result = SendRequest("", "delfolder", {
+		["path"] = folderpath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+end
+
+Environment.listfiles = function(folderpath)
+	assert(type(folderpath) == "string", "invalid argument #1 to 'listfiles' (string expected, got " .. type(folderpath) .. ") ", 2)
+	
+	local result = SendRequest("", "listfiles", {
+		["path"] = folderpath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+	
+	local files = HttpService:JSONDecode(result)
+	return files
+end
+
+Environment.appendfile = function(filepath, content)
+	assert(type(filepath) == "string", "invalid argument #1 to 'appendfile' (string expected, got " .. type(filepath) .. ") ", 2)
+	assert(type(content) == "string", "invalid argument #2 to 'appendfile' (string expected, got " .. type(content) .. ") ", 2)
+	
+	local result = SendRequest(content, "appendfile", {
+		["path"] = filepath
+	})
+	
+	if result:find("ERROR:") == 1 then
+		error(result:sub(8), 2)
+	end
+end
+
+Environment.loadfile = function(filepath)
+	assert(type(filepath) == "string", "invalid argument #1 to 'loadfile' (string expected, got " .. type(filepath) .. ") ", 2)
+	
+	if not Environment.isfile(filepath) then
+		return nil, "cannot open " .. filepath .. ": No such file or directory"
+	end
+	
+	local content = Environment.readfile(filepath)
+	local func, err = Environment.loadstring(content, "@" .. filepath)
+	
+	if not func then
+		return nil, err
+	end
+	
+	return func
+end
+
+Environment.dofile = function(filepath)
+	assert(type(filepath) == "string", "invalid argument #1 to 'dofile' (string expected, got " .. type(filepath) .. ") ", 2)
+	
+	local func, err = Environment.loadfile(filepath)
+	if not func then
+		error(err, 2)
+	end
+	
+	return func()
+end
 
 -- Event listener initialization
 SendRequest("", "listen")
