@@ -1127,6 +1127,122 @@ Environment.dofile = function(filepath)
 	return func()
 end
 
+local Environment = {}
+Environment.debug = table.clone(debug) -- cloned debug table
+
+-- getinfo
+function Environment.debug.getinfo(f, options)
+	options = type(options) == "string" and string.lower(options) or "sflnu"
+	local result = {}
+	for index = 1, #options do
+		local option = string.sub(options, index, index)
+		if option == "s" then
+			local short_src = debug.info(f, "s")
+			result.short_src = short_src
+			result.source = "=" .. short_src
+			result.what = (short_src == "[C]") and "C" or "Lua"
+		elseif option == "f" then
+			result.func = debug.info(f, "f")
+		elseif option == "l" then
+			result.currentline = debug.info(f, "l")
+		elseif option == "n" then
+			result.name = debug.info(f, "n")
+		elseif option == "u" or option == "a" then
+			local numparams, is_vararg = debug.info(f, "a")
+			result.numparams = numparams
+			result.is_vararg = is_vararg and 1 or 0
+			if option == "u" then
+				result.nups = -1
+			end
+		end
+	end
+	return result
+end
+
+-- getmetatable
+function Environment.debug.getmetatable(table_or_userdata)
+	local result = getmetatable(table_or_userdata)
+	if not result then return end
+
+	if type(result) == "table" and pcall(setmetatable, table_or_userdata, result) then
+		return result
+	end
+
+	local real_metamethods = {}
+
+	local type_check_semibypass = {}
+
+	xpcall(function() return table_or_userdata._ end, function() real_metamethods.__index = debug.info(2, "f") end)
+	xpcall(function() table_or_userdata._ = table_or_userdata end, function() real_metamethods.__newindex = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata:___() end, function() real_metamethods.__namecall = debug.info(2, "f") end)
+	xpcall(function() table_or_userdata() end, function() real_metamethods.__call = debug.info(2, "f") end)
+	xpcall(function() for _ in table_or_userdata do end end, function() real_metamethods.__iter = debug.info(2, "f") end)
+	xpcall(function() return #table_or_userdata end, function() real_metamethods.__len = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata == table_or_userdata end, function() real_metamethods.__eq = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata + type_check_semibypass end, function() real_metamethods.__add = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata - type_check_semibypass end, function() real_metamethods.__sub = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata * type_check_semibypass end, function() real_metamethods.__mul = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata / type_check_semibypass end, function() real_metamethods.__div = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata // type_check_semibypass end, function() real_metamethods.__idiv = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata % type_check_semibypass end, function() real_metamethods.__mod = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata ^ type_check_semibypass end, function() real_metamethods.__pow = debug.info(2, "f") end)
+	xpcall(function() return -table_or_userdata end, function() real_metamethods.__unm = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata < type_check_semibypass end, function() real_metamethods.__lt = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata <= type_check_semibypass end, function() real_metamethods.__le = debug.info(2, "f") end)
+	xpcall(function() return table_or_userdata .. type_check_semibypass end, function() real_metamethods.__concat = debug.info(2, "f") end)
+
+	real_metamethods.__type = typeof(table_or_userdata)
+	real_metamethods.__metatable = getmetatable(game)
+	real_metamethods.__tostring = function() return tostring(table_or_userdata) end
+	return real_metamethods
+end
+
+-- setmetatable
+Environment.debug.setmetatable = setmetatable
+
+-- getrawmetatable
+function Environment.getrawmetatable(object)
+	assert(type(object) == "table" or type(object) == "userdata", "invalid argument #1 to 'getrawmetatable' (table or userdata expected)")
+	local raw_mt = Environment.debug.getmetatable(object)
+	if raw_mt and raw_mt.__metatable then
+		raw_mt.__metatable = nil
+		local result_mt = Environment.debug.getmetatable(object)
+		raw_mt.__metatable = "Locked!"
+		return result_mt
+	end
+	return raw_mt
+end
+
+-- setrawmetatable
+function Environment.setrawmetatable(object, newmetatbl)
+	assert(type(object) == "table" or type(object) == "userdata", "invalid argument #1 to 'setrawmetatable'")
+	assert(type(newmetatbl) == "table" or newmetatbl == nil, "invalid argument #2 to 'setrawmetatable'")
+	local raw_mt = Environment.debug.getmetatable(object)
+	if raw_mt and raw_mt.__metatable then
+		local old_metatable = raw_mt.__metatable
+		raw_mt.__metatable = nil
+		local success, err = pcall(setmetatable, object, newmetatbl)
+		raw_mt.__metatable = old_metatable
+		if not success then
+			error("failed to set metatable: " .. tostring(err))
+		end
+		return true
+	end
+	setmetatable(object, newmetatbl)
+	return true
+end
+
+-- hookmetamethod
+function Environment.hookmetamethod(t, index, func)
+	assert(type(t) == "table" or type(t) == "userdata", "invalid argument #1 to 'hookmetamethod'")
+	assert(type(index) == "string", "invalid argument #2 to 'hookmetamethod'")
+	assert(type(func) == "function", "invalid argument #3 to 'hookmetamethod'")
+	local mt = Environment.debug.getmetatable(t)
+	mt[index] = func
+	return mt
+end
+
+
 -- Event listener initialization
 SendRequest("", "listen")
 task.spawn(function()
